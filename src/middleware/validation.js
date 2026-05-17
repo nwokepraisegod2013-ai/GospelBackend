@@ -47,6 +47,16 @@ export const validateContentCreation = [
   body('thumbnailUrl').isURL().withMessage('Valid thumbnail URL is required'),
   body('contentUrl').isURL().withMessage('Valid content URL is required'),
   body('duration').optional().isInt({ min: 0 }).withMessage('Duration must be a positive number'),
+  // Music-specific optional fields
+  body('artist').optional().isLength({ max: 200 }).withMessage('Artist name too long'),
+  body('album').optional().isLength({ max: 200 }).withMessage('Album name too long'),
+  body('trackNumber').optional().isInt({ min: 0 }).withMessage('Invalid track number'),
+  body('genre').optional().isString(),
+  body('bitrate').optional().isInt({ min: 0 }).withMessage('Invalid bitrate'),
+  body('sampleRate').optional().isInt({ min: 0 }).withMessage('Invalid sample rate'),
+  body('audioFormat').optional().isString(),
+  body('lyricsUrl').optional().isURL().withMessage('lyricsUrl must be a valid URL'),
+  body('explicit').optional().isBoolean().withMessage('explicit must be a boolean'),
   validate,
 ];
 

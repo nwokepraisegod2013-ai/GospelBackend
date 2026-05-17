@@ -73,6 +73,37 @@ const contentSchema = new mongoose.Schema(
     },
     liveStartTime: Date,
     liveEndTime: Date,
+    // Music-specific metadata
+    artist: {
+      type: String,
+      maxlength: [200, 'Artist name too long'],
+    },
+    album: {
+      type: String,
+      maxlength: [200, 'Album name too long'],
+    },
+    trackNumber: {
+      type: Number,
+    },
+    genre: {
+      type: String,
+    },
+    bitrate: {
+      type: Number, // kbps
+    },
+    sampleRate: {
+      type: Number, // Hz
+    },
+    audioFormat: {
+      type: String, // mp3, wav, m4a, etc.
+    },
+    lyricsUrl: {
+      type: String,
+    },
+    explicit: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,

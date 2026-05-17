@@ -29,13 +29,20 @@ export const getAllContent = async (req, res, next) => {
     
     const total = await Content.countDocuments(query);
     
+    // Convert stored duration (seconds) to milliseconds for Flutter client
+    const data = content.map((c) => {
+      const obj = c.toObject({ virtuals: true });
+      obj.duration = (obj.duration || 0) * 1000;
+      return obj;
+    });
+
     res.status(200).json({
       success: true,
-      data: content,
+      data,
       pagination: {
         total,
         page: parseInt(page),
-        pages: Math.ceil(total / limit),
+        pages: Math.ceil(total / parseInt(limit)),
         limit: parseInt(limit),
       },
     });
@@ -60,9 +67,13 @@ export const getContentById = async (req, res, next) => {
       throw new NotFoundError('Content not found');
     }
     
+    // Convert stored duration (seconds) to milliseconds for Flutter client
+    const contentObj = content.toObject({ virtuals: true });
+    contentObj.duration = (contentObj.duration || 0) * 1000;
+
     res.status(200).json({
       success: true,
-      data: content,
+      data: contentObj,
     });
   } catch (error) {
     next(error);
@@ -72,6 +83,12 @@ export const getContentById = async (req, res, next) => {
 export const createContent = async (req, res, next) => {
   try {
     const { title, subtitle, description, type, category, thumbnailUrl, contentUrl, duration } = req.body;
+
+    // Accept duration in milliseconds from client (Flutter). Convert to seconds for storage.
+    let durationSeconds = 0;
+    if (typeof duration === 'number') {
+      durationSeconds = duration >= 1000 ? Math.floor(duration / 1000) : duration;
+    }
     
     const content = new Content({
       title,
@@ -81,7 +98,7 @@ export const createContent = async (req, res, next) => {
       category,
       thumbnailUrl,
       contentUrl,
-      duration,
+      duration: durationSeconds,
       author: req.user._id,
     });
     
@@ -89,11 +106,14 @@ export const createContent = async (req, res, next) => {
     await content.populate('author', 'name avatar email');
     
     logger.info(`Content created: ${content._id}`);
-    
+    // Return duration as milliseconds to match Flutter client expectations
+    const contentObj = content.toObject({ virtuals: true });
+    contentObj.duration = (contentObj.duration || 0) * 1000;
+
     res.status(201).json({
       success: true,
       message: 'Content created successfully',
-      data: content,
+      data: contentObj,
     });
   } catch (error) {
     next(error);
@@ -103,7 +123,7 @@ export const createContent = async (req, res, next) => {
 export const updateContent = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { title, subtitle, description, category, isPublished } = req.body;
+    const { title, subtitle, description, category, isPublished, duration } = req.body;
     
     let content = await Content.findById(id);
     
@@ -119,18 +139,27 @@ export const updateContent = async (req, res, next) => {
       });
     }
     
+    // If client supplies duration in milliseconds, convert to seconds for storage
+    const updatePayload = { title, subtitle, description, category, isPublished };
+    if (typeof duration === 'number') {
+      updatePayload.duration = duration >= 1000 ? Math.floor(duration / 1000) : duration;
+    }
+
     content = await Content.findByIdAndUpdate(
       id,
-      { title, subtitle, description, category, isPublished },
+      updatePayload,
       { new: true, runValidators: true }
     ).populate('author', 'name avatar');
     
     logger.info(`Content updated: ${content._id}`);
-    
+    // Return duration as milliseconds to match Flutter client expectations
+    const updatedObj = content.toObject({ virtuals: true });
+    updatedObj.duration = (updatedObj.duration || 0) * 1000;
+
     res.status(200).json({
       success: true,
       message: 'Content updated successfully',
-      data: content,
+      data: updatedObj,
     });
   } catch (error) {
     next(error);
