@@ -1,5 +1,6 @@
 import ChatMessage from '../models/ChatMessage.js';
 import Content from '../models/Content.js';
+import User from '../models/User.js';
 import { NotFoundError } from '../utils/errors.js';
 import logger from '../utils/logger.js';
 
@@ -37,6 +38,23 @@ export const getMessages = async (req, res, next) => {
   }
 };
 
+const createGuestUser = async () => {
+  const guestEmail = 'guest@gospel.local';
+  let guest = await User.findOne({ email: guestEmail });
+
+  if (!guest) {
+    guest = await User.create({
+      name: 'Guest User',
+      email: guestEmail,
+      password: 'guestpassword',
+      role: 'user',
+      isVerified: true,
+    });
+  }
+
+  return guest;
+};
+
 export const sendMessage = async (req, res, next) => {
   try {
     const { contentId } = req.params;
@@ -46,10 +64,15 @@ export const sendMessage = async (req, res, next) => {
     if (!content) {
       throw new NotFoundError('Content not found');
     }
+
+    let author = req.user;
+    if (!author) {
+      author = await createGuestUser();
+    }
     
     const chatMessage = new ChatMessage({
       contentId,
-      author: req.user._id,
+      author: author._id,
       message,
     });
     

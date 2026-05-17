@@ -1,5 +1,5 @@
 import express from 'express';
-import { authenticate } from '../middleware/auth.js';
+import { authenticate, optionalAuthenticate } from '../middleware/auth.js';
 import {
   getMessages,
   sendMessage,
@@ -13,7 +13,7 @@ import {
 const router = express.Router();
 
 router.get('/:contentId/messages', validateMongoId, getMessages);
-router.post('/:contentId/messages', authenticate, validateMongoId, validateChatMessage, sendMessage);
+router.post('/:contentId/messages', optionalAuthenticate, validateMongoId, validateChatMessage, sendMessage);
 router.delete('/messages/:messageId', authenticate, validateMongoId, deleteMessage);
 
 export default router;

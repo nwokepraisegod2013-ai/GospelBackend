@@ -1,5 +1,5 @@
 import express from 'express';
-import { authenticate, authorize } from '../middleware/auth.js';
+import { authenticate, authorize, optionalAuthenticate } from '../middleware/auth.js';
 import {
   getAllContent,
   getContentById,
@@ -21,6 +21,6 @@ router.get('/:id', validateMongoId, getContentById);
 router.post('/', authenticate, authorize('creator', 'admin'), validateContentCreation, createContent);
 router.put('/:id', authenticate, validateMongoId, validateContentUpdate, updateContent);
 router.delete('/:id', authenticate, validateMongoId, deleteContent);
-router.post('/:id/like', authenticate, validateMongoId, likeContent);
+router.post('/:id/like', optionalAuthenticate, validateMongoId, likeContent);
 
 export default router;

@@ -206,6 +206,16 @@ export const likeContent = async (req, res, next) => {
       throw new NotFoundError('Content not found');
     }
     
+    if (!req.user) {
+      content.likes += 1;
+      await content.save();
+      return res.status(200).json({
+        success: true,
+        message: 'Content liked',
+        data: { likes: content.likes, isLiked: true },
+      });
+    }
+
     // Check if user already liked
     const existingLike = await Like.findOne({
       contentId: id,
